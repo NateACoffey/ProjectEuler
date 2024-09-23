@@ -4,30 +4,48 @@ program large_sum
 	implicit none
 	integer, parameter :: n = 100
 	character(len=50) :: numbers(n)
-	integer :: i, ios
-	integer(kind=8) :: sum, integer_var, total
-	character(len=50) :: char_var
-	character(len=10) :: first_ten
+	character(len=53) :: numb
+	integer :: i, j, carry, digit
+	integer :: sum(54)
+	integer :: first_non_zero
 	
 	
 	call read_numbers_from_file('numbers.txt', numbers, n)
 	
 	sum = 0
+	carry = 0
+	do i = 1, n
+        numb = '000' // trim(numbers(i))
+
+        !add numbers from right to left
+        do j = 53, 1, -1
+            digit = ichar(numb(j:j)) - ichar('0')
+            sum(j+1) = sum(j+1) + digit + carry  !account for the carry
+            carry = sum(j+1) / 10
+            sum(j+1) = mod(sum(j+1), 10)
+        end do
+        sum(1) = sum(1) + carry  !add remaining carry
+        carry = 0
+    end do
 	
-	do i = 1, SIZE(numbers)
-		READ(numbers(i)(1:15), '(I15)') integer_var
-		sum = sum + integer_var
+	first_non_zero = 1
+	do j = 1, 53
+		if (sum(j+1) /= 0) then
+		    first_non_zero = j + 1
+		    exit
+		end if
 	end do
+
 	
-	WRITE(char_var, '(I50)') sum
+	do j = first_non_zero, first_non_zero + 9
+		write(*, '(I1)', advance='no') sum(j)
+	end do
+	print *
 	
-	first_ten = trim(adjustl(char_var))
-	
-	print *, first_ten
 	
 end program
 
-! Subroutine to read numbers from the file
+
 subroutine read_numbers_from_file(filename, numbers, n)
 	implicit none
 	character(len=*), intent(in) :: filename
